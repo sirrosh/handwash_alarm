@@ -1,6 +1,6 @@
 #include P12F675.inc
 radix dec
-    __CONFIG   _CP_OFF & _CPD_OFF & _WDT_OFF & _PWRTE_ON & _INTRC_OSC_NOCLKOUT & _MCLRE_OFF
+    __CONFIG   _CP_OFF & _CPD_OFF & _WDT_OFF & _PWRTE_ON & _INTRC_OSC_NOCLKOUT & _MCLRE_ON
 
 #define Light       GPIO, GP0
 
