@@ -13,7 +13,7 @@ radix dec
 ; T0IF --------------------+||
 ; INTF ---------------------+|
 ; GPIF ----------------------+
-#define	RS_T1CON    B'00110001'     ; Tc=Fosc/4=1MHz, 1:8 = 125000ticks/s, interrupt every 0.52428 seconds
+#define	RS_T1CON    B'00110001'     ; Tc=Fosc/4=1MHz, 1:8 = 125000ticks/s, interrupt every 0.52428 seconds @ TMR1 overflow
 ; N/I ----------------+|||||||
 ; TMR1GE --------------+||||||
 ; T1CKPS1 --------------+|||||
@@ -22,7 +22,7 @@ radix dec
 ; /T1SYNC -----------------+||
 ; TMR1CS -------------------+|
 ; TMR1ON --------------------+
-#define MyDelay      39            ; 39 interrupts in 20.44692 seconds
+#define MyDelay      59             ; we need ~59 interrupts for ~23 sec
 
                                     ; Work modes register
 #define mCounting   wMode, 0        ; Counting active
@@ -70,13 +70,15 @@ START
     MOVLW   MyDelay                 ; Start counting 24h
     MOVWF   TH
     BSF     mCounting               ; Mode select bit
+    MOVLW   RS_INTCON
+    MOVWF   INTCON                  ; Allow interrupts
 
 RUN_CYCLE
     ; do smth useful
     NOP
     BTFSS   mCounting
-    SLEEP
-    GOTO RUN_CYCLE                  ; loop forever
+    SLEEP                           ; halt forever here
+    GOTO    RUN_CYCLE               ; loop
 
 ;
 ; Subroutine toggles the light and saves the current state
@@ -104,9 +106,12 @@ INTERRUPT
                             ; why we are here?
     banksel PIR1
     BTFSS   PIR1, TMR1IF    ; is it TMR1?
-    GOTO    OTHER_INT         ; no, something else
+    GOTO    OTHER_INT       ; no, something else
 ;--- here starts TMR1 ISR
+
     BCF     PIR1, TMR1IF    ; yes, it is TMR1
+    BTFSS   mLight          ; make "on" cycles halfway shorter
+    BSF     TMR1H, 7        ; by setting TMR1_MSB=1
     CALL    TLIGHT          ; toggle light
     DECFSZ  TH              ; decrement counter
     GOTO    EXIT_INT        ; this is not the end, continuing
