@@ -110,11 +110,11 @@ INTERRUPT
 ;--- here starts TMR1 ISR
 
     BCF     PIR1, TMR1IF    ; yes, it is TMR1
-    BTFSS   mLight          ; make "on" cycles halfway shorter
-    BSF     TMR1H, 7        ; by setting TMR1_MSB=1
+    BTFSS   mLight          ; if the light's not lit
+    BSF     TMR1H, 7        ; make "on" cycles halfway shorter by setting TMR1_MSB=1
     CALL    TLIGHT          ; toggle light
     DECFSZ  TH              ; decrement counter
-    GOTO    EXIT_INT        ; this is not the end, continuing
+    GOTO    EXIT_INT        ; this is not the end, continuing to exit
     CLRF    INTCON          ; this is the end, my friend...
     CLRF    wMode           ; turning everything off
     BCF     Light
@@ -123,7 +123,7 @@ INTERRUPT
 OTHER_INT
     banksel PIR1
     CLRF    PIR1            ; we souldn't be here, unexpected interrupt
-    BCF     INTCON, GPIF    ; clearing all IFs to avoid interrupt loop
+    BCF     INTCON, GPIF    ; clearing all IFs to avoid interrupt loopp
     BCF     INTCON, T0IF
 EXIT_INT
     SWAPF   STATUS_temp, W  ; swap STATUS_TEMP register into W, sets bank to original state
